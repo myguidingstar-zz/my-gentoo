@@ -15,7 +15,7 @@ RDEPEND="virtual/ooo"
 DEPEND="${RDEPEND}"
 
 src_compile() {
-unzip ${DISTDIR}/B2UConverter.oxt -d ${WORKDIR}
+unzip ${DISTDIR}/b2uconverter-10.01.4.oxt -d ${WORKDIR}
 }
 src_install() {
 	insinto "${INSTDIR}"
