@@ -1,0 +1,13 @@
+diff --git a/src/compiledata.cpp b/src/compiledata.cpp
+index 351fdd4..a1ff5fc 100755
+--- compiledata.cpp
++++ compiledata.cpp
+@@ -402,7 +402,7 @@ return;
+ 		instn_category = (instn >> 12) & 0xf;
+ 		data1 = instn & 0xff;
+ 		type2 = (instn >> 8) & 0xf;
+-		fprintf(f_out, "  %.3x: %.4x  %s",pc-prog_buf,instn,instn_category_string[instn_category]);
++		fprintf(f_out, "  %.3lx: %.4x  %s",pc-prog_buf,instn,instn_category_string[instn_category]);
+ 
+ 		switch(instn_category)
+ 		{
