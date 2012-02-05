@@ -34,7 +34,7 @@ LICENSE="GPL-2
 		CCPL-Attribution-NonCommercial-NoDerivs-2.5
 	)"
 SLOT="0"
-KEYWORDS="~amd64 ~x86"
+KEYWORDS="amd64 x86"
 
 IUSE="debug midi songs tools webcam"
 
