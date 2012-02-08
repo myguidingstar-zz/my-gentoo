@@ -75,9 +75,6 @@ pkg_setup() {
 
 src_prepare() {
 	# backported ifnet patches
-	#~ epatch "${FILESDIR}/${P}-shared-connection.patch"
-	#~ epatch "${FILESDIR}/${P}-fix-tests.patch"
-	#~ epatch "${FILESDIR}/${P}-ifnet-smarter-write.patch"
 	eautoreconf
 }
 
