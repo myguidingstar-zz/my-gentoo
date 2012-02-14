@@ -12,9 +12,9 @@ fi
 
 inherit scons-utils eutils python versionator flag-o-matic toolchain-funcs ${SCM}
 
-IUSE="cycles +game-engine player +elbeem +openexr ffmpeg jpeg2k openal openmp \
+IUSE="+game-engine player +elbeem +openexr ffmpeg jpeg2k openal openmp \
 	+dds debug doc fftw jack apidoc sndfile lcms tweak-mode sdl sse \
-	redcode +zlib iconv contrib 3dmouse"
+	redcode +zlib iconv contrib verse 3dmouse"
 
 LANGS="en ar bg ca cs de el es fi fr hr it ja ko nl pl pt_BR ro ru sr sv uk zh_CN"
 for X in ${LANGS} ; do
@@ -46,12 +46,8 @@ RDEPEND="virtual/jpeg
 	>=media-libs/freetype-2.0
 	virtual/libintl
 	media-libs/glew
+	dev-cpp/eigen:2
 	>=sci-physics/bullet-2.76
-	dev-cpp/eigen:3
-	cycles? (
-		media-libs/openimageio
-		dev-libs/boost
-	)
 	iconv? ( virtual/libiconv )
 	zlib? ( sys-libs/zlib )
 	sdl? ( media-libs/libsdl[audio,joystick] )
@@ -122,6 +118,7 @@ pkg_setup() {
 
 src_prepare() {
 	epatch "${FILESDIR}"/${P}-desktop.patch
+	epatch "${FILESDIR}"/${PN}-${SLOT}-doxyfile.patch
 
 	# TODO: write a proper Makefile to replace the borked bmake script
 	epatch "${FILESDIR}"/${PN}-${SLOT}-bmake.patch
@@ -135,22 +132,17 @@ src_prepare() {
 	# Glew
 	einfo "Removing bundled Glew ..."
 	rm -r extern/glew
-	epatch "${FILESDIR}"/${P}-glew.patch
+	epatch "${FILESDIR}"/${PN}-${SLOT}-glew.patch
 
-	# Eigen3
-	einfo "Removing bundled Eigen3 ..."
-	rm -r extern/Eigen3
-	epatch "${FILESDIR}"/${P}-eigen.patch
-
-	# Bullet2
-	einfo "Removing bundled Bullet2 ..."
-	rm -r extern/bullet2
-	epatch "${FILESDIR}"/${PN}-${SLOT}-bullet.patch
+	# Eigen2
+	einfo "Removing bundled Eigen2 ..."
+	rm -r extern/Eigen2
+	epatch "${FILESDIR}"/${PN}-${SLOT}-eigen.patch
 
 	# Linux 3.x (bug #381099)
-	epatch "${FILESDIR}"/${PN}-${SLOT}-linux-3.patch
+	epatch "${FILESDIR}"/${P}-linux-3.patch
 
-	epatch "${FILESDIR}"/${PN}-${SLOT}-libav-0.7.patch
+	epatch "${FILESDIR}"/${P}-libav-0.7.patch
 	epatch "${FILESDIR}"/${P}-CVE-2009-3850-v3.patch
 	epatch "${FILESDIR}"/${P}-enable_site_module.patch
 }
@@ -173,12 +165,12 @@ src_configure() {
 	fi
 
 	# add system sci-physic/bullet into Scons build options.
-	cat <<- EOF >> "${S}"/user-config.py
-		WITH_BF_BULLET=1
-		BF_BULLET="/usr/include"
-		BF_BULLET_INC="/usr/include/bullet /usr/include/bullet/BulletCollision /usr/include/bullet/BulletDynamics /usr/include/bullet/LinearMath /usr/include/bullet/BulletSoftBody"
-		BF_BULLET_LIB="BulletSoftBody BulletDynamics BulletCollision LinearMath"
-	EOF
+#	cat <<- EOF >> "${S}"/user-config.py
+#		WITH_BF_BULLET=1
+#		BF_BULLET="/usr/include"
+#		BF_BULLET_INC="/usr/include /usr/include/BulletCollision /usr/include/BulletDynamics /usr/include/LinearMath /usr/include/BulletSoftBody"
+#		BF_BULLET_LIB="BulletSoftBody BulletDynamics BulletCollision LinearMath"
+#	EOF
 
 	#add iconv into Scons build options.
 	if use !elibc_glibc && use !elibc_uclibc && use iconv; then
@@ -280,6 +272,7 @@ src_configure() {
 		'sse rayoptimization' \
 		'redcode' \
 		'zlib' \
+		'verse' \
 		'3dmouse' ; do
 		blend_with ${arg}
 	done
@@ -287,21 +280,6 @@ src_configure() {
 	# enable debugging/testing support
 	use debug && echo "BF_DEBUG=1" >> "${S}"/user-config.py
 	use test && echo "BF_UNIT_TEST=1" >> "${S}"/user-config.py
-
-	# enables Cycles render engine
-	if use cycles; then
-		cat <<- EOF >> "${S}"/user-config.py
-			WITH_BF_CYCLES=1
-			WITH_BF_OIIO=1
-			BF_OIIO="/usr"
-			BF_OIIO_INC="/usr/include"
-			BF_OIIO_LIB="OpenImageIO"
-			WITH_BF_BOOST=1
-			BF_BOOST="/usr"
-			BF_BOOST_INC="/usr/include/boost"
-		EOF
-	fi
-
 }
 
 src_compile() {
@@ -319,7 +297,7 @@ src_compile() {
 
 src_install() {
 	# creating binary wrapper
-	cat <<- EOF >> "${WORKDIR}/install/blender-${PV}"
+	cat <<- EOF >> "${WORKDIR}/install/blender-${SLOT}"
 		#!/bin/sh
 
 		# stop this script if the local blender path is a symlink
@@ -331,43 +309,50 @@ src_install() {
 			exit 1
 		fi
 
-		export BLENDER_SYSTEM_SCRIPTS="/usr/share/blender/${PV}/scripts"
-		export BLENDER_SYSTEM_DATAFILES="/usr/share/blender/${PV}/datafiles"
-		export BLENDER_SYSTEM_PLUGINS="/usr/lib/blender/${PV}/plugins"
-			exec /usr/bin/blender-bin-${PV} \$*
+		export BLENDER_SYSTEM_SCRIPTS="/usr/share/blender/${SLOT}/scripts"
+		export BLENDER_SYSTEM_DATAFILES="/usr/share/blender/${SLOT}/datafiles"
+		export BLENDER_SYSTEM_PLUGINS="/usr/lib/blender/${SLOT}/plugins"
+			exec /usr/bin/blender-bin-${SLOT} \$*
 	EOF
 
 	# install binaries
 	exeinto /usr/bin/
-	cp "${WORKDIR}/install/blender" "${WORKDIR}/install/blender-bin-${PV}"
-	doexe "${WORKDIR}/install/blender-bin-${PV}"
-	doexe "${WORKDIR}/install/blender-${PV}"
+	cp "${WORKDIR}/install/blender" "${WORKDIR}/install/blender-bin-${SLOT}"
+	doexe "${WORKDIR}/install/blender-bin-${SLOT}"
+	doexe "${WORKDIR}/install/blender-${SLOT}"
 	if use player; then
 		cp "${WORKDIR}/install/blenderplayer" \
-			"${WORKDIR}/install/blenderplayer-${PV}"
-		doexe "${WORKDIR}/install/blenderplayer-${PV}"
+			"${WORKDIR}/install/blenderplayer-${SLOT}"
+		doexe "${WORKDIR}/install/blenderplayer-${SLOT}"
 	fi
+#	if use verse; then
+#		cp "${WORKDIR}"/install/bin/verse_server \
+#			"${WORKDIR}/install/bin/verse_server-${SLOT}"
+#		doexe "${WORKDIR}"/install/bin/verse_server-${SLOT}
+#	fi
 
 	# install plugins
-	exeinto /usr/$(get_libdir)/${PN}/${PV}/plugins/texture
+	exeinto /usr/$(get_libdir)/${PN}/${SLOT}/plugins/texture
 	doexe "${WORKDIR}"/${P}/release/plugins/texture/*.so
-	exeinto /usr/$(get_libdir)/${PN}/${PV}/plugins/sequences
+	exeinto /usr/$(get_libdir)/${PN}/${SLOT}/plugins/sequences
 	doexe "${WORKDIR}"/${P}/release/plugins/sequence/*.so
-	insinto /usr/include/${PN}/${PV}
+	insinto /usr/include/${PN}/${SLOT}
 	doins "${WORKDIR}"/${P}/source/blender/blenpluginapi/*.h
-	insinto /usr/share/${PN}/${PV}/scripts
-	use contrib && doins -r "${WORKDIR}"/${P}/release/scripts/addons_contrib
+#	rm -r "${WORKDIR}"/${P}/release/plugins
+#	insinto /usr/share/${PN}/${SLOT}
+#	doins "${WORKDIR}"/${P}/release/datafiles
+#	doins "${WORKDIR}"/${P}/release/scripts
 
 	# install desktop file
 	insinto /usr/share/pixmaps
 	cp release/freedesktop/icons/scalable/apps/blender.svg \
-		release/freedesktop/icons/scalable/apps/blender-${PV}.svg
-	doins release/freedesktop/icons/scalable/apps/blender-${PV}.svg
+		release/freedesktop/icons/scalable/apps/blender-${SLOT}.svg
+	doins release/freedesktop/icons/scalable/apps/blender-${SLOT}.svg
 	insinto /usr/share/applications
 	cp release/freedesktop/blender.desktop \
-		release/freedesktop/blender-${PV}.desktop
-	doins release/freedesktop/blender-${PV}.desktop
-	newins "${FILESDIR}"/${P}-insecure.desktop ${P}-insecure.desktop
+		release/freedesktop/blender-${SLOT}.desktop
+	doins release/freedesktop/blender-${SLOT}.desktop
+	newins "${FILESDIR}"/${P}-insecure.desktop ${PN}-${SLOT}-insecure.desktop
 
 	# install docs
 	doman "${WORKDIR}"/${P}/doc/manpage/blender.1
@@ -391,7 +376,7 @@ src_install() {
 		dohtml -r "${WORKDIR}"/${P}/doc/BGE_API/*
 
 		#einfo "Generating (BPY) Blender Python API docs ..."
-		"${D}"/usr/bin/blender-bin-${PV} --background --python doc/python_api/sphinx_doc_gen.py || die "blender failed."
+		"${D}"/usr/bin/blender-bin-2.60 --background --python doc/python_api/sphinx_doc_gen.py || die "blender failed."
 		pushd doc/python_api > /dev/null
 		sphinx-build sphinx-in BPY_API || die "sphinx failed."
 		popd > /dev/null
@@ -411,8 +396,8 @@ src_install() {
 	rm -r "${WORKDIR}"/install/{Python-license.txt,icons,GPL-license.txt,copyright.txt}
 
 	# installing blender
-	insinto /usr/share/${PN}/${PV}
-	doins -r "${WORKDIR}"/install/${PV}/*
+	insinto /usr/share/${PN}/${SLOT}
+	doins -r "${WORKDIR}"/install/${SLOT}/*
 
 	# FIX: making all python scripts readable only by group 'users',
 	#	  so nobody can modify scripts apart root user, but python
@@ -420,6 +405,13 @@ src_install() {
 #	chown root:users -R "${D}/usr/share/${PN}/${SLOT}/scripts" || die
 #	chmod 755 -R "${D}/usr/share/${PN}/${SLOT}/scripts" || die
 }
+
+#pkg_preinst() {
+#	if [ -h "${ROOT}/usr/$(get_libdir)/blender/plugins/include" ];
+#	then
+#		rm -r "${ROOT}"/usr/$(get_libdir)/blender/plugins/include
+#	fi
+#}
 
 pkg_postinst() {
 	echo

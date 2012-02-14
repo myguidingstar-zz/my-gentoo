@@ -16,7 +16,7 @@ ESVN_REPO_URI="https://${PN}.svn.sourceforge.net/svnroot/${PN}/${PN}/trunk@r181"
 
 LICENSE="GPL-3"
 SLOT="0"
-KEYWORDS="amd64 86 mingw32"
+KEYWORDS="amd64 x86 mingw32"
 IUSE=""
 
 RDEPEND="

@@ -13,7 +13,7 @@ fi
 inherit scons-utils eutils python versionator flag-o-matic toolchain-funcs ${SCM}
 
 IUSE="cycles +game-engine player +elbeem +openexr ffmpeg jpeg2k openal openmp \
-	+dds debug doc fftw jack apidoc sndfile lcms tweak-mode sdl sse \
+	+dds debug doc fftw jack apidoc sndfile tweak-mode sdl sse \
 	redcode +zlib iconv contrib 3dmouse"
 
 LANGS="en ar bg ca cs de el es fi fr hr it ja ko nl pl pt_BR ro ru sr sv uk zh_CN"
@@ -64,7 +64,6 @@ RDEPEND="virtual/jpeg
 	fftw? ( sci-libs/fftw:3.0 )
 	jack? ( media-sound/jack-audio-connection-kit )
 	sndfile? ( media-libs/libsndfile )
-	lcms? ( media-libs/lcms )
 	3dmouse? ( dev-libs/libspnav )"
 
 DEPEND="dev-util/scons
@@ -123,10 +122,6 @@ pkg_setup() {
 src_prepare() {
 	epatch "${FILESDIR}"/${P}-desktop.patch
 
-	# TODO: write a proper Makefile to replace the borked bmake script
-	epatch "${FILESDIR}"/${PN}-${SLOT}-bmake.patch
-	chmod 755 "${WORKDIR}"/${P}/release/plugins/bmake
-
 	# OpenJPEG
 	einfo "Removing bundled OpenJPEG ..."
 	rm -r extern/libopenjpeg
@@ -151,7 +146,7 @@ src_prepare() {
 	epatch "${FILESDIR}"/${PN}-${SLOT}-linux-3.patch
 
 	epatch "${FILESDIR}"/${PN}-${SLOT}-libav-0.7.patch
-	epatch "${FILESDIR}"/${P}-CVE-2009-3850-v3.patch
+	epatch "${FILESDIR}"/${P}-CVE-2009-3850-v4.patch
 	epatch "${FILESDIR}"/${P}-enable_site_module.patch
 }
 
@@ -162,15 +157,6 @@ src_configure() {
 		BF_OPENJPEG_INC="/usr/include"
 		BF_OPENJPEG_LIB="openjpeg"
 	EOF
-
-	# FIX: littlecms includes path aren't specified
-	if use lcms; then
-		cat <<- EOF >> "${S}"/user-config.py
-			BF_LCMS_INC="/usr/include/"
-			BF_LCMS_LIB="lcms"
-			BF_LCMS_LIBPATH="/usr/lib/"
-		EOF
-	fi
 
 	# add system sci-physic/bullet into Scons build options.
 	cat <<- EOF >> "${S}"/user-config.py
@@ -266,7 +252,6 @@ src_configure() {
 	for arg in \
 		'sdl' \
 		'apidoc docs' \
-		'lcms' \
 		'jack' \
 		'sndfile' \
 		'openexr' \
@@ -308,13 +293,6 @@ src_compile() {
 	escons || die \
 		'!!! Please add "${S}/scons.config" when filing bugs reports \
 		to bugs.gentoo.org'
-
-	einfo "Building plugins ..."
-	# FIX: plugins are built without respecting user's LDFLAGS
-	emake \
-		CFLAGS="${CFLAGS} -fPIC" \
-		LDFLAGS="$(raw-ldflags) -Bshareable" \
-		-C release/plugins
 }
 
 src_install() {
@@ -348,13 +326,11 @@ src_install() {
 		doexe "${WORKDIR}/install/blenderplayer-${PV}"
 	fi
 
-	# install plugins
-	exeinto /usr/$(get_libdir)/${PN}/${PV}/plugins/texture
-	doexe "${WORKDIR}"/${P}/release/plugins/texture/*.so
-	exeinto /usr/$(get_libdir)/${PN}/${PV}/plugins/sequences
-	doexe "${WORKDIR}"/${P}/release/plugins/sequence/*.so
+	# install plugin headers
 	insinto /usr/include/${PN}/${PV}
 	doins "${WORKDIR}"/${P}/source/blender/blenpluginapi/*.h
+
+	# install contrib scripts addons
 	insinto /usr/share/${PN}/${PV}/scripts
 	use contrib && doins -r "${WORKDIR}"/${P}/release/scripts/addons_contrib
 
