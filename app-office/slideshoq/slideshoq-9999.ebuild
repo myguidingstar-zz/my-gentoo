@@ -8,7 +8,7 @@ KEYWORDS="amd64 x86"
 DESCRIPTION="SlideShoQ is a PDF presentation software that supports two-screen presentations: One screen shows the current slide fullscreen, i.e. what you want to show on the projector for the audience, the second screen is your computer, which shows the current, next and previous slides, current time and other useful information."
 IUSE=""
 
-inherit git
+inherit git-2
 
 EGIT_REPO_URI="git://gitorious.org/slideshoq/slideshoq.git"
 PATCHES=""
