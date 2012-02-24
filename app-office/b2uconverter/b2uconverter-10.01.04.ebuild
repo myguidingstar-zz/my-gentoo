@@ -3,8 +3,8 @@
 inherit multilib
 
 DESCRIPTION="Converting documents from old Vietnamese encodings to Unicode"
-HOMEPAGE="http://extensions.libreoffice.org/extension-center/b2uconverter/"
-SRC_URI="http://github.com/downloads/myguidingstar/B2Uconverter/B2UConverter.oxt"
+HOMEPAGE="http://extensions.libreoffice.org/extension-center/${PN}/"
+SRC_URI="http://extensions.libreoffice.org/extension-center/${PN}/releases/${PV}/${PN}-${PV}.oxt"
 INSTDIR="/usr/$(get_libdir)/libreoffice/share/extensions/${PN}"
 
 LICENSE="LGPL-2.1"
@@ -15,7 +15,7 @@ RDEPEND="virtual/ooo"
 DEPEND="${RDEPEND}"
 
 src_compile() {
-unzip ${DISTDIR}/B2UConverter.oxt -d ${WORKDIR}
+unzip ${DISTDIR}/${PN}-${PV}.oxt -d ${WORKDIR}
 }
 src_install() {
 	insinto "${INSTDIR}"
