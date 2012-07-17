@@ -1,0 +1,5 @@
+ ## NITECH and Tokyo Institute of Technologies HTS support
++ALSO_INCLUDE += hts21_engine
+ ALSO_INCLUDE += hts_engine
+ 
+ ## Old diphone code that will be delete, left in only for some

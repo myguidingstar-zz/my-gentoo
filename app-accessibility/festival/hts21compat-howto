@@ -1,0 +1,4 @@
+#This is how the patch was produced
+wget 'http://anonscm.debian.org/gitweb/?p=tts/festival.git;a=blob_plain;f=debian/patches/hts21compat.diff;hb=cabc6f7f14fd687a5caae57ff5cc9e54141d6581' -O hts21compat.diff
+cat hts21compat.diff |sed 's@+++ festival-2.1~release/@+++ @g' > festival-2.1-hts21compat.patch
+rm hts21compat.diff
