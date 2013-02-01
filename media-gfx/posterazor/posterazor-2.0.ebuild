@@ -1,8 +1,8 @@
 # Copyright 1999-2007 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-inherit git-2
 EAPI=3
 
+inherit git-2
 
 DESCRIPTION="PosteRazor cuts raster images into multipage PDF documents."
 HOMEPAGE="http://posterazor.sourceforge.net/"
